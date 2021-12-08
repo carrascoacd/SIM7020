@@ -25,17 +25,17 @@
  * THE SOFTWARE.
  */
 
-#ifndef __HTTPS_H__
-#define __HTTPS_H__
+#ifndef __HTTP_H__
+#define __HTTP_H__
 
 #include "Sim7020.h"
 #include "Result.h"
 
-class HTTPS : public SIM7020
+class HTTP : public SIM7020
 {
 
 public:
-  HTTPS(unsigned int baudRate,
+  HTTP(unsigned int baudRate,
        unsigned int rxPin,
        unsigned int txPin,
        unsigned int rstPin) : SIM7020(baudRate, rxPin, txPin, rstPin){};

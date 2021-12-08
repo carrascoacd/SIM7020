@@ -1,6 +1,6 @@
 /*
  * Http.cpp
- * A HTTP library for the SIM7020 board
+ * HTTP library for the SIM7020 board
  *
  * Copyright 2021 Antonio Carrasco
  *
@@ -25,7 +25,7 @@
  * THE SOFTWARE.
  */
 
-#include "Https.h"
+#include "Http.h"
 
 const char AT_OK[] PROGMEM = "OK";
 const char AT_OK_[] = "OK";
@@ -45,7 +45,7 @@ const char HTTP_SEND[] PROGMEM = "AT+CHTTPSEND=0,0,\"%s\"\r\n";
 const char HTTP_CONTENT_[] = "+CHTTPNMIC: ";
 const char HTTP_2XX_[] = "+CHTTPNMIH: 0,2XX";
 
-Result HTTPS::connect(const char *apn)
+Result HTTP::connect(const char *apn)
 {
   Result result;
 
@@ -71,7 +71,7 @@ Result HTTPS::connect(const char *apn)
   return result;
 }
 
-Result HTTPS::disconnect()
+Result HTTP::disconnect()
 {
   Result result;
 
@@ -99,7 +99,7 @@ int hexDigit(char c)
 }
 
 
-Result HTTPS::get(const char *host, const char *path, char *response)
+Result HTTP::get(const char *host, const char *path, char *response)
 {
   Result result;
 
