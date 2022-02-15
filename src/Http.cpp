@@ -41,7 +41,8 @@ const char HTTP_DISCONNECT[] PROGMEM = "AT+CHTTPDISCON=0\r\n";
 const char HTTP_DESTROY[] PROGMEM = "AT+CHTTPDESTROY=0\r\n";
 const char HTTP_CREATE[] PROGMEM = "AT+CHTTPCREATE=\"%s\"\r\n";
 const char HTTP_CONNECT[] PROGMEM = "AT+CHTTPCON=0\r\n";
-const char HTTP_SEND[] PROGMEM = "AT+CHTTPSEND=0,0,\"%s\"\r\n";
+const char HTTP_SEND_GET[] PROGMEM = "AT+CHTTPSEND=0,0,\"%s\"\r\n";
+const char HTTP_SEND_POST[] PROGMEM = "AT+CHTTPSEND=0,1,\"%s\",,\"application/json\",%s\r\n";
 const char HTTP_CONTENT_[] = "+CHTTPNMIC: ";
 const char HTTP_2XX_[] = "+CHTTPNMIH: 0,2XX";
 
@@ -84,6 +85,24 @@ Result HTTP::disconnect()
   return result;
 }
 
+Result HTTP::prepare(const char *host)
+{
+  Result result;
+
+  char buffer[64];
+  char tmp[64];
+
+  strcpy_P(tmp, host);
+  sprintf_P(buffer, HTTP_CREATE, tmp);
+  if (sendCmdAndWaitForResp(buffer, AT_OK_, 5000) == FALSE)
+    result = ERROR_HTTP_CLOSE;
+
+  if (sendCmdAndWaitForResp_P(HTTP_CONNECT, AT_OK, 10000) == TRUE)
+    result = SUCCESS;
+
+  return result;
+}
+
 int hexDigit(char c)
 {
   if (c >= '0' && c <= '9')
@@ -98,23 +117,37 @@ int hexDigit(char c)
   return 0;
 }
 
+void ASCIItoHex(const char *input, char *output){
+    int inputIndex = 0;
+    int outputIndex = 0;
 
-Result HTTP::get(const char *host, const char *path, char *response)
+    while(input[inputIndex] != '\0')
+    {
+        sprintf((char*)(output+outputIndex),"%02X", input[inputIndex]);
+        input++;
+        outputIndex+=2;
+    }
+
+    output[outputIndex++] = '\0';
+}
+
+Result HTTP::post(const char *host, const char *path, const char *body, char *response) 
 {
-  Result result;
+  Result result = prepare(host);
 
   char buffer[512];
-  char tmp[128];
-  strcpy_P(tmp, host);
-  sprintf_P(buffer, HTTP_CREATE, tmp);
-  if (sendCmdAndWaitForResp(buffer, AT_OK_, 5000) == FALSE)
-    result = ERROR_HTTP_CLOSE;
+  char encodedBody[256];
+  char tmp[64];
 
-  if (sendCmdAndWaitForResp_P(HTTP_CONNECT, AT_OK, 10000) == TRUE)
-    result = SUCCESS;
-  
+  ASCIItoHex(body, encodedBody);
+
+  cleanBuffer(buffer, sizeof(buffer));
+  cleanBuffer(tmp, sizeof(tmp));
+  cleanBuffer(response, sizeof(response));
+
   strcpy_P(tmp, path);
-  sprintf_P(buffer, HTTP_SEND, tmp);
+  sprintf_P(buffer, HTTP_SEND_POST, tmp, encodedBody);
+
   if (sendCmdAndWaitForResp(buffer, HTTP_2XX_, 8000) == FALSE)
     result = ERROR_HTTP_CLOSE;
 
@@ -152,7 +185,66 @@ Result HTTP::get(const char *host, const char *path, char *response)
     }
   }
 
-  // Parse content
+  // Decode base16 content
+  unsigned int responseIndex = 0;
+  unsigned int pkgSizeIndex = 3;
+
+  for (unsigned int i = startContentIndex; i < parameters[pkgSizeIndex] * 2 + startContentIndex; i += 2){
+    response[responseIndex] = (char)(hexDigit(buffer[i]) * 16 + hexDigit(buffer[i+1]));
+    responseIndex ++;
+  }
+  response[responseIndex] = '\0';
+
+  return result;
+}
+
+Result HTTP::get(const char *host, const char *path, char *response)
+{
+  Result result = prepare(host);
+  
+  char buffer[128];
+  char tmp[128];
+
+  strcpy_P(tmp, path);
+  sprintf_P(buffer, HTTP_SEND_GET, tmp);
+  if (sendCmdAndWaitForResp(buffer, HTTP_2XX_, 8000) == FALSE)
+    result = ERROR_HTTP_CLOSE;
+
+  if (waitForResp(HTTP_CONTENT_, 5000) == FALSE)
+    result = ERROR_HTTP_CLOSE;
+
+  cleanBuffer(buffer, sizeof(buffer));
+  cleanBuffer(tmp, sizeof(tmp));
+  cleanBuffer(response, sizeof(response));
+
+  if (readBuffer(buffer, sizeof(buffer)) == FALSE)
+    return ERROR_HTTP_CLOSE;
+
+  //+CHTTPNMIC: 0,0,21,21,7b2277656174686572456e7472696573223a5b5d7d
+
+  // Fetch parameters
+  const unsigned int maxParameters = 4;
+  unsigned int parameters[maxParameters];
+  unsigned int currentParameter = 0;
+  unsigned int startContentIndex = 0;
+  unsigned int tmpIndex = 0;
+  for (unsigned int i = 0; i < strlen(buffer); ++i){
+    tmp[tmpIndex] = buffer[i];
+    tmpIndex ++;
+    if (',' == buffer[i]) {
+      tmp[tmpIndex - 1] = '\0';
+      tmpIndex = 0;
+
+      parameters[currentParameter] = atoi(tmp);
+      currentParameter ++;
+    }
+    if (maxParameters == currentParameter) {
+      startContentIndex = i + 1;
+      break;
+    }
+  }
+
+  // Decode base16 content
   unsigned int responseIndex = 0;
   unsigned int pkgSizeIndex = 3;
 

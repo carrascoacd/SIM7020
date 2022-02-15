@@ -42,7 +42,10 @@ public:
   Result connect(const char *apn);
   Result disconnect();
   Result get(const char *host, const char *path, char *response);
+  Result post(const char *host, const char *path, const char *body, char *response);
 
+private: 
+  Result prepare(const char *host);
 };
 
 #endif
