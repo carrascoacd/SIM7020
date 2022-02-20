@@ -1,6 +1,6 @@
 /*
- * Http.h
  * HTTP library for the SIM7020 board
+ * Parser.h
  *
  * Copyright 2022 Antonio Carrasco
  *
@@ -25,27 +25,13 @@
  * THE SOFTWARE.
  */
 
-#ifndef __HTTP_H__
-#define __HTTP_H__
+#ifndef __PARSER_H__
+#define __PARSER_H__
 
-#include "Sim7020.h"
-#include "Result.h"
-
-class HTTP : public SIM7020
+class Parser
 {
-
-public:
-  HTTP(unsigned int baudRate,
-       unsigned int rxPin,
-       unsigned int txPin,
-       unsigned int rstPin) : SIM7020(baudRate, rxPin, txPin, rstPin){};
-  Result connect(const char *apn);
-  Result disconnect();
-  Result get(const char *host, const char *path, char *response);
-  Result post(const char *host, const char *path, const char *body, char *response);
-
-private: 
-  Result prepare(const char *host);
+  public:
+    void parseResponse(const char *response, char *result);
 };
 
 #endif

@@ -3,7 +3,7 @@
  * A library for SeeedStudio seeeduino GPRS shield
  *
  * Original work Copyright (c) 2013 seeed technology inc. [lawliet zou]
- * Modified work Copyright 2021 Antonio Carrasco
+ * Modified work Copyright 2022 Antonio Carrasco
  *
  * The MIT License (MIT)
  *
