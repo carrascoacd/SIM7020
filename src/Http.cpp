@@ -139,7 +139,7 @@ Result HTTP::post(const char *host, const char *path, const char *body, char *re
   char encodedBody[256];
   char tmp[64];
 
-  ASCIItoHex(body, encodedBody);
+  parser->encodeBody(body, encodedBody);
 
   cleanBuffer(buffer, sizeof(buffer));
   cleanBuffer(tmp, sizeof(tmp));
@@ -161,39 +161,7 @@ Result HTTP::post(const char *host, const char *path, const char *body, char *re
   if (readBuffer(buffer, sizeof(buffer)) == FALSE)
     return ERROR_HTTP_CLOSE;
 
-  //+CHTTPNMIC: 0,0,21,21,7b2277656174686572456e7472696573223a5b5d7d
-
-  // Fetch parameters
-  const unsigned int maxParameters = 4;
-  unsigned int parameters[maxParameters];
-  unsigned int currentParameter = 0;
-  unsigned int startContentIndex = 0;
-  unsigned int tmpIndex = 0;
-  for (unsigned int i = 0; i < strlen(buffer); ++i){
-    tmp[tmpIndex] = buffer[i];
-    tmpIndex ++;
-    if (',' == buffer[i]) {
-      tmp[tmpIndex - 1] = '\0';
-      tmpIndex = 0;
-
-      parameters[currentParameter] = atoi(tmp);
-      currentParameter ++;
-    }
-    if (maxParameters == currentParameter) {
-      startContentIndex = i + 1;
-      break;
-    }
-  }
-
-  // Decode base16 content
-  unsigned int responseIndex = 0;
-  unsigned int pkgSizeIndex = 3;
-
-  for (unsigned int i = startContentIndex; i < parameters[pkgSizeIndex] * 2 + startContentIndex; i += 2){
-    response[responseIndex] = (char)(hexDigit(buffer[i]) * 16 + hexDigit(buffer[i+1]));
-    responseIndex ++;
-  }
-  response[responseIndex] = '\0';
+  parser->parseResponse(buffer, response);
 
   return result;
 }

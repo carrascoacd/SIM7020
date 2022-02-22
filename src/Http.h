@@ -30,7 +30,7 @@
 
 #include "Sim7020.h"
 #include "Result.h"
-
+#include "Parser.h"
 class HTTP : public SIM7020
 {
 
@@ -38,7 +38,9 @@ public:
   HTTP(unsigned int baudRate,
        unsigned int rxPin,
        unsigned int txPin,
-       unsigned int rstPin) : SIM7020(baudRate, rxPin, txPin, rstPin){};
+       unsigned int rstPin) : SIM7020(baudRate, rxPin, txPin, rstPin){
+    parser = new Parser();
+  };
   Result connect(const char *apn);
   Result disconnect();
   Result get(const char *host, const char *path, char *response);
@@ -46,6 +48,8 @@ public:
 
 private: 
   Result prepare(const char *host);
+
+  Parser *parser;
 };
 
 #endif

@@ -26,43 +26,85 @@
  */
 
 #include "Parser.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <Arduino.h>
+
+void Parser::encodeBody(const char *body, char *result){
+  ASCIItoHex(body, result);
+}
+
+void Parser::ASCIItoHex(const char *input, char *output){
+    int inputIndex = 0;
+    int outputIndex = 0;
+
+    while(input[inputIndex] != '\0')
+    {
+        sprintf((char*)(output+outputIndex),"%02X", input[inputIndex]);
+        input++;
+        outputIndex+=2;
+    }
+
+    output[outputIndex++] = '\0';
+}
+
+// 30 = 3×16^1+0×16^0 = 48 = '0' character
+void Parser::hexToASCII(const char *input, char *output){
+  int outputIndex = 0;
+  
+  for (unsigned int inputIndex = 0; inputIndex < strlen(input); inputIndex += 2){
+    output[outputIndex] = (char)(hexDigit(input[inputIndex]) * 16 + hexDigit(input[inputIndex+1]));
+    outputIndex++;
+  }
+  
+   output[outputIndex++] = '\0';
+}
 
 void Parser::parseResponse(const char *response, char *result) {
-  // char tmp[64];
+  char tmp[64];
 
-  // //+CHTTPNMIC: 0,0,21,21,7b2277656174686572456e7472696573223a5b5d7d
+  //+CHTTPNMIC: 0,0,21,21,7b2277656174686572456e7472696573223a5b5d7d
 
-  // // Fetch parameters
-  // const unsigned int maxParameters = 4;
-  // unsigned int parameters[maxParameters];
-  // unsigned int currentParameter = 0;
-  // unsigned int startContentIndex = 0;
-  // unsigned int tmpIndex = 0;
-  // for (unsigned int i = 0; i < strlen(response); ++i){
-  //   tmp[tmpIndex] = response[i];
-  //   tmpIndex ++;
-  //   if (',' == response[i]) {
-  //     tmp[tmpIndex - 1] = '\0';
-  //     tmpIndex = 0;
+  // Fetch parameters
+  const unsigned int maxParameters = 4;
+  unsigned int parameters[maxParameters];
+  unsigned int currentParameter = 0;
+  unsigned int startContentIndex = 0;
+  unsigned int tmpIndex = 0;
+  for (unsigned int i = 0; i < strlen(response); ++i){
+    tmp[tmpIndex] = response[i];
+    tmpIndex ++;
+    if (',' == response[i]) {
+      tmp[tmpIndex - 1] = '\0';
+      tmpIndex = 0;
 
-  //     parameters[currentParameter] = atoi(tmp);
-  //     currentParameter ++;
-  //   }
-  //   if (maxParameters == currentParameter) {
-  //     startContentIndex = i + 1;
-  //     break;
-  //   }
-  // }
+      parameters[currentParameter] = atoi(tmp);
+      currentParameter ++;
+    }
+    if (maxParameters == currentParameter) {
+      startContentIndex = i + 1;
+      break;
+    }
+  }
 
-  // // Decode base16 content
-  // unsigned int resultIndex = 0;
-  // unsigned int pkgSizeIndex = 3;
+  // Decode base16 content
+  unsigned int resultIndex = 0;
+  unsigned int pkgSizeIndex = 3;
 
-  // for (unsigned int i = startContentIndex; i < parameters[pkgSizeIndex] * 2 + startContentIndex; i += 2){
-  //   result[resultIndex] = (char)(hexDigit(response[i]) * 16 + hexDigit(response[i+1]));
-  //   resultIndex ++;
-  // }
-  // result[resultIndex] = '\0';
+  for (unsigned int i = startContentIndex; i < parameters[pkgSizeIndex] * 2 + startContentIndex; i += 2){
+    result[resultIndex] = (char)(hexDigit(response[i]) * 16 + hexDigit(response[i+1]));
+    resultIndex ++;
+  }
+  result[resultIndex] = '\0';
+}
+
+int Parser::hexDigit(char c){
+  if (c >= '0' && c <= '9')
+    return c - '0';
+
+  if (c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+
+  if (c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+
+  return 0;
 }

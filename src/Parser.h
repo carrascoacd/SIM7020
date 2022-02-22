@@ -32,6 +32,12 @@ class Parser
 {
   public:
     void parseResponse(const char *response, char *result);
+    void encodeBody(const char *body, char *result);
+
+  private:
+    int hexDigit(char c);
+    void ASCIItoHex(const char *input, char *output);
+    void hexToASCII(const char *input, char *output);
 };
 
 #endif
