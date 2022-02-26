@@ -38,7 +38,8 @@ public:
   HTTP(unsigned int baudRate,
        unsigned int rxPin,
        unsigned int txPin,
-       unsigned int rstPin) : SIM7020(baudRate, rxPin, txPin, rstPin){
+       unsigned int rstPin,
+       int verbose) : SIM7020(baudRate, rxPin, txPin, rstPin, verbose){
     parser = new Parser();
   };
   Result connect(const char *apn);

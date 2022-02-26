@@ -38,6 +38,7 @@ const char AT[] PROGMEM = "AT\r\n";
 
 int SIM7020::preInit(void)
 {
+    /*
     pinMode(resetPin, OUTPUT);
 
     digitalWrite(resetPin, HIGH);
@@ -46,7 +47,8 @@ int SIM7020::preInit(void)
     delay(2000);
     digitalWrite(resetPin, HIGH);
     delay(3000);
-
+    */
+   
     purgeSerial();
     serialSIM7020.flush();
 
@@ -103,7 +105,6 @@ void SIM7020::cleanBuffer(char *buffer, int count)
 void SIM7020::sendCmd(const char *cmd, unsigned int delayBeforeSend)
 {
     serialSIM7020.listen();
-    serialSIM7020.flush();
     delay(delayBeforeSend);
     write(cmd);
     serialSIM7020.flush();
@@ -127,9 +128,7 @@ int SIM7020::waitForResp(const char *resp, unsigned int timeout)
         {
             char c = serialSIM7020.read();
             
-            #ifdef DEBUG
-              Serial.print(c);
-            #endif
+            if (TRUE == verboseEnabled) Serial.print(c);
                 
             sum = (c == resp[sum] || resp[sum] == 'X') ? sum + 1 : 0;
             if (sum == len)

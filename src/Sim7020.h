@@ -36,9 +36,6 @@
 #define FALSE 0
 #define DEFAULT_TIMEOUT 5000
 
-// Comment or uncomment this to debug the library
-#define DEBUG true
-
 /** SIM7020 class.
  *  Used for SIM7020 communication. attention that SIM7020 module communicate with MCU in serial protocol
  */
@@ -51,14 +48,18 @@ public:
      *  @param baudRate baud rate of uart communication
      *  @param rxPin uart receive pin to communicate with SIM7020
      *  @param txPin uart transmit pin to communicate with SIM7020
+     *  @param rstPin reset pin of SIM7020
+     *  @param verbose controls if the Serial is used for debugging purposes
      */
     SIM7020(unsigned int baudRate,
            unsigned int rxPin,
            unsigned int txPin,
-           unsigned int rstPin) : serialSIM7020(rxPin, txPin)
+           unsigned int rstPin,
+           int verbose = TRUE) : serialSIM7020(rxPin, txPin)
     {
         serialSIM7020.begin(baudRate);
         resetPin = rstPin;
+        verboseEnabled = verbose;
     };
 
     /** Power on SIM7020
@@ -89,7 +90,7 @@ public:
      *  @param cmd  command array which will be send to GPRS module
      *  @param delayBeforeSend  integer indicating the sime to wait before sending a command
      */
-    void sendCmd(const char *cmd, unsigned int delayBeforeSend = 100);
+    void sendCmd(const char *cmd, unsigned int delayBeforeSend = 0);
 
     /**send "AT" to SIM7020 module
      */
@@ -142,6 +143,7 @@ public:
 protected:
     SoftwareSerial serialSIM7020;
     unsigned int resetPin;
+    int verboseEnabled;
 };
 
 #endif

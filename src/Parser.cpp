@@ -32,36 +32,8 @@ void Parser::encodeBody(const char *body, char *result){
   ASCIItoHex(body, result);
 }
 
-void Parser::ASCIItoHex(const char *input, char *output){
-    int inputIndex = 0;
-    int outputIndex = 0;
-
-    while(input[inputIndex] != '\0')
-    {
-        sprintf((char*)(output+outputIndex),"%02X", input[inputIndex]);
-        input++;
-        outputIndex+=2;
-    }
-
-    output[outputIndex++] = '\0';
-}
-
-// 30 = 3×16^1+0×16^0 = 48 = '0' character
-void Parser::hexToASCII(const char *input, char *output){
-  int outputIndex = 0;
-  
-  for (unsigned int inputIndex = 0; inputIndex < strlen(input); inputIndex += 2){
-    output[outputIndex] = (char)(hexDigit(input[inputIndex]) * 16 + hexDigit(input[inputIndex+1]));
-    outputIndex++;
-  }
-  
-   output[outputIndex++] = '\0';
-}
-
 void Parser::parseResponse(const char *response, char *result) {
   char tmp[64];
-
-  //+CHTTPNMIC: 0,0,21,21,7b2277656174686572456e7472696573223a5b5d7d
 
   // Fetch parameters
   const unsigned int maxParameters = 4;
@@ -107,4 +79,30 @@ int Parser::hexDigit(char c){
     return c - 'a' + 10;
 
   return 0;
+}
+
+void Parser::ASCIItoHex(const char *input, char *output){
+    int inputIndex = 0;
+    int outputIndex = 0;
+
+    while(input[inputIndex] != '\0')
+    {
+        sprintf((char*)(output+outputIndex),"%02X", input[inputIndex]);
+        input++;
+        outputIndex+=2;
+    }
+
+    output[outputIndex++] = '\0';
+}
+
+// 30 = 3×16^1+0×16^0 = 48 = '0' character
+void Parser::hexToASCII(const char *input, char *output){
+  int outputIndex = 0;
+  
+  for (unsigned int inputIndex = 0; inputIndex < strlen(input); inputIndex += 2){
+    output[outputIndex] = (char)(hexDigit(input[inputIndex]) * 16 + hexDigit(input[inputIndex+1]));
+    outputIndex++;
+  }
+  
+   output[outputIndex++] = '\0';
 }

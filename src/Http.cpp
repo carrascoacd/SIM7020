@@ -103,34 +103,6 @@ Result HTTP::prepare(const char *host)
   return result;
 }
 
-int hexDigit(char c)
-{
-  if (c >= '0' && c <= '9')
-    return c - '0';
-
-  if (c >= 'A' && c <= 'F')
-    return c - 'A' + 10;
-
-  if (c >= 'a' && c <= 'f')
-    return c - 'a' + 10;
-
-  return 0;
-}
-
-void ASCIItoHex(const char *input, char *output){
-    int inputIndex = 0;
-    int outputIndex = 0;
-
-    while(input[inputIndex] != '\0')
-    {
-        sprintf((char*)(output+outputIndex),"%02X", input[inputIndex]);
-        input++;
-        outputIndex+=2;
-    }
-
-    output[outputIndex++] = '\0';
-}
-
 Result HTTP::post(const char *host, const char *path, const char *body, char *response) 
 {
   Result result = prepare(host);
@@ -170,8 +142,8 @@ Result HTTP::get(const char *host, const char *path, char *response)
 {
   Result result = prepare(host);
   
-  char buffer[128];
-  char tmp[128];
+  char buffer[512];
+  char tmp[64];
 
   strcpy_P(tmp, path);
   sprintf_P(buffer, HTTP_SEND_GET, tmp);
@@ -188,39 +160,7 @@ Result HTTP::get(const char *host, const char *path, char *response)
   if (readBuffer(buffer, sizeof(buffer)) == FALSE)
     return ERROR_HTTP_CLOSE;
 
-  //+CHTTPNMIC: 0,0,21,21,7b2277656174686572456e7472696573223a5b5d7d
-
-  // Fetch parameters
-  const unsigned int maxParameters = 4;
-  unsigned int parameters[maxParameters];
-  unsigned int currentParameter = 0;
-  unsigned int startContentIndex = 0;
-  unsigned int tmpIndex = 0;
-  for (unsigned int i = 0; i < strlen(buffer); ++i){
-    tmp[tmpIndex] = buffer[i];
-    tmpIndex ++;
-    if (',' == buffer[i]) {
-      tmp[tmpIndex - 1] = '\0';
-      tmpIndex = 0;
-
-      parameters[currentParameter] = atoi(tmp);
-      currentParameter ++;
-    }
-    if (maxParameters == currentParameter) {
-      startContentIndex = i + 1;
-      break;
-    }
-  }
-
-  // Decode base16 content
-  unsigned int responseIndex = 0;
-  unsigned int pkgSizeIndex = 3;
-
-  for (unsigned int i = startContentIndex; i < parameters[pkgSizeIndex] * 2 + startContentIndex; i += 2){
-    response[responseIndex] = (char)(hexDigit(buffer[i]) * 16 + hexDigit(buffer[i+1]));
-    responseIndex ++;
-  }
-  response[responseIndex] = '\0';
+  parser->parseResponse(buffer, response);
 
   return result;
 }
