@@ -16,31 +16,9 @@ HTTP http(SIM_BAUD_RATE, SIM_RX_PIN, SIM_TX_PIN, SIM_RESET_PIN, VERBOSE);
 test(doPOSTRequestSuccessfullyAndReturnSuccess) {
   Serial.println(F("Running doPOSTRequestSuccessfullyAndReturnSuccess"));
   
-  char response[64];
+  char response[32];
   http.connect(APN);
   http.post(HOST, PATH, "{\"action\": \"success\"}", response);
-  http.disconnect();
-  
-  assertEqual(response, "{\"action\": \"success\"}");
-}
-
-test(doPOSTRequestSuccessfullyAndReturnCreated) {
-  Serial.println(F("Running doPOSTRequestSuccessfullyAndReturnCreated"));
-
-  char response[64];
-  http.connect(APN);
-  http.post(HOST, PATH, "{\"action\": \"created\"}", response);
-  http.disconnect();
-  
-  assertEqual(response, "{\"action\": \"created\"}");
-}
-
-test(doGETRequestSuccessfullyAndReturnSuccess) {
-  Serial.println(F("Running doGETRequestSuccessfullyAndReturnSuccess"));
-
-  char response[64];
-  http.connect(APN);
-  http.get(HOST, PATH, response);
   http.disconnect();
   
   assertEqual(response, "{\"action\": \"success\"}");

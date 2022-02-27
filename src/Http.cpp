@@ -54,9 +54,9 @@ Result HTTP::connect(const char *apn)
     result = ERROR_HTTP_INIT;
 
   char httpApn[64];
-  char tmp[24];
-  strcpy_P(tmp, apn);
-  sprintf_P(httpApn, SET_APN, tmp);
+  char buffer2[24];
+  strcpy_P(buffer2, apn);
+  sprintf_P(httpApn, SET_APN, buffer2);
   if (sendCmdAndWaitForResp(httpApn, AT_OK_, 10000) == FALSE)
     result = ERROR_HTTP_INIT;
 
@@ -89,12 +89,12 @@ Result HTTP::prepare(const char *host)
 {
   Result result;
 
-  char buffer[64];
-  char tmp[64];
+  char buffer1[64];
+  char buffer2[64];
 
-  strcpy_P(tmp, host);
-  sprintf_P(buffer, HTTP_CREATE, tmp);
-  if (sendCmdAndWaitForResp(buffer, AT_OK_, 5000) == FALSE)
+  strcpy_P(buffer2, host);
+  sprintf_P(buffer1, HTTP_CREATE, buffer2);
+  if (sendCmdAndWaitForResp(buffer1, AT_OK_, 5000) == FALSE)
     result = ERROR_HTTP_CLOSE;
 
   if (sendCmdAndWaitForResp_P(HTTP_CONNECT, AT_OK, 10000) == TRUE)
@@ -107,33 +107,33 @@ Result HTTP::post(const char *host, const char *path, const char *body, char *re
 {
   Result result = prepare(host);
 
-  char buffer[512];
+  char buffer1[400];
+  char buffer2[64];
   char encodedBody[256];
-  char tmp[64];
 
   parser->encodeBody(body, encodedBody);
 
-  cleanBuffer(buffer, sizeof(buffer));
-  cleanBuffer(tmp, sizeof(tmp));
+  cleanBuffer(buffer1, sizeof(buffer1));
+  cleanBuffer(buffer2, sizeof(buffer2));
   cleanBuffer(response, sizeof(response));
 
-  strcpy_P(tmp, path);
-  sprintf_P(buffer, HTTP_SEND_POST, tmp, encodedBody);
+  strcpy_P(buffer2, path);
+  sprintf_P(buffer1, HTTP_SEND_POST, buffer2, encodedBody);
 
-  if (sendCmdAndWaitForResp(buffer, HTTP_2XX_, 8000) == FALSE)
+  if (sendCmdAndWaitForResp(buffer1, HTTP_2XX_, 8000) == FALSE)
     result = ERROR_HTTP_CLOSE;
 
   if (waitForResp(HTTP_CONTENT_, 5000) == FALSE)
     result = ERROR_HTTP_CLOSE;
 
-  cleanBuffer(buffer, sizeof(buffer));
-  cleanBuffer(tmp, sizeof(tmp));
+  cleanBuffer(buffer1, sizeof(buffer1));
+  cleanBuffer(buffer2, sizeof(buffer2));
   cleanBuffer(response, sizeof(response));
 
-  if (readBuffer(buffer, sizeof(buffer)) == FALSE)
+  if (readBuffer(buffer1, sizeof(buffer1)) == FALSE)
     return ERROR_HTTP_CLOSE;
 
-  parser->parseResponse(buffer, response);
+  parser->parseResponse(buffer1, response);
 
   return result;
 }
@@ -142,25 +142,25 @@ Result HTTP::get(const char *host, const char *path, char *response)
 {
   Result result = prepare(host);
   
-  char buffer[512];
-  char tmp[64];
+  char buffer1[400];
+  char buffer2[64];
 
-  strcpy_P(tmp, path);
-  sprintf_P(buffer, HTTP_SEND_GET, tmp);
-  if (sendCmdAndWaitForResp(buffer, HTTP_2XX_, 8000) == FALSE)
+  strcpy_P(buffer2, path);
+  sprintf_P(buffer1, HTTP_SEND_GET, buffer2);
+  if (sendCmdAndWaitForResp(buffer1, HTTP_2XX_, 8000) == FALSE)
     result = ERROR_HTTP_CLOSE;
 
   if (waitForResp(HTTP_CONTENT_, 5000) == FALSE)
     result = ERROR_HTTP_CLOSE;
 
-  cleanBuffer(buffer, sizeof(buffer));
-  cleanBuffer(tmp, sizeof(tmp));
+  cleanBuffer(buffer1, sizeof(buffer1));
+  cleanBuffer(buffer2, sizeof(buffer2));
   cleanBuffer(response, sizeof(response));
 
-  if (readBuffer(buffer, sizeof(buffer)) == FALSE)
+  if (readBuffer(buffer1, sizeof(buffer1)) == FALSE)
     return ERROR_HTTP_CLOSE;
 
-  parser->parseResponse(buffer, response);
+  parser->parseResponse(buffer1, response);
 
   return result;
 }
