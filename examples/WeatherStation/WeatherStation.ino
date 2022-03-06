@@ -51,17 +51,6 @@ void sleep() {
   }
 }
 
-unsigned int readLipoVoltage(HTTP *http) {
-  unsigned int voltage = 0;
-  for (uint8_t i = 0; i < 10; ++i) {
-    unsigned int cv = http->readVoltage();
-    if (cv > voltage) {
-      voltage = cv;
-    }
-  }
-  return voltage;
-}
-
 unsigned int availableMemory() {
   int size = 1024;
   byte *buf;
@@ -74,6 +63,7 @@ unsigned int availableMemory() {
 
 Result postEntry(char *response) {
   HTTP http(SIM_BAUD_RATE, SIM_RX_PIN, SIM_TX_PIN, SIM_RESET_PIN, VERBOSE);
+  http.wakeUp();
   
   unsigned int temperature = readTemperature();
   Serial.print(F("temperature:"));
@@ -93,7 +83,7 @@ Result postEntry(char *response) {
   unsigned int litioVoltage = readLitioVoltage();
   Serial.print(F("litioVoltage: "));
   Serial.println(litioVoltage);
-  unsigned int liPoVoltage = readLipoVoltage(&http);
+  unsigned int liPoVoltage = http.readVoltage();
   Serial.print(F("liPoVoltage: "));
   Serial.println(liPoVoltage);
 
@@ -113,8 +103,6 @@ Result postEntry(char *response) {
   Serial.print(F("SRAM: "));  
   Serial.println(availableMemory());
 
-  http.wakeUp();
-  delay(100);
   http.connect(APN);
   http.post(HOST, PATH, body, response);
   http.disconnect();
