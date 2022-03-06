@@ -13,18 +13,16 @@ const char PATH[] PROGMEM = "/top-garden";
 
 HTTP http(SIM_BAUD_RATE, SIM_RX_PIN, SIM_TX_PIN, SIM_RESET_PIN, VERBOSE);
 
-test(doPOSTRequestSuccessfullyAndReturnSuccess)
+test(readsBatteryVoltageSuccessFully)
 {
-  Serial.println(F("Running doPOSTRequestSuccessfullyAndReturnSuccess"));
+  Serial.println(F("Running readsBatteryVoltageSuccessFully"));
 
-  char response[32];
   http.wakeUp();
-  http.connect(APN);
-  http.post(HOST, PATH, "{\"action\": \"success\"}", response);
-  http.disconnect();
-  http.sleep();
+  unsigned int voltage = http.readVoltage();
+  Serial.println(voltage);
+  bool positiveVoltage = voltage > 0;
 
-  assertEqual(response, "{\"action\": \"success\"}");
+  assertTrue(positiveVoltage);
 }
 
 //----------------------------------------------------------------------------

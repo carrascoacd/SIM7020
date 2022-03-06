@@ -13,14 +13,17 @@ const char PATH[] PROGMEM = "/top-garden";
 
 HTTP http(SIM_BAUD_RATE, SIM_RX_PIN, SIM_TX_PIN, SIM_RESET_PIN, VERBOSE);
 
-test(doGETRequestSuccessfullyAndReturnSuccess) {
+test(doGETRequestSuccessfullyAndReturnSuccess)
+{
   Serial.println(F("Running doGETRequestSuccessfullyAndReturnSuccess"));
 
   char response[32];
+  http.wakeUp();
   http.connect(APN);
   http.get(HOST, PATH, response);
   http.disconnect();
-  
+  http.sleep();
+
   assertEqual(response, "{\"action\": \"success\"}");
 }
 
@@ -28,13 +31,14 @@ test(doGETRequestSuccessfullyAndReturnSuccess) {
 // setup() and loop()
 //----------------------------------------------------------------------------
 
-void setup() {
+void setup()
+{
   Serial.begin(19200);
-  while(!Serial);
-
-  http.preInit();
+  while (!Serial)
+    ;
 }
 
-void loop() {
+void loop()
+{
   aunit::TestRunner::run();
 }

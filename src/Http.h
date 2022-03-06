@@ -39,15 +39,17 @@ public:
        unsigned int rxPin,
        unsigned int txPin,
        unsigned int rstPin,
-       int verbose) : SIM7020(baudRate, rxPin, txPin, rstPin, verbose){
+       int verbose) : SIM7020(baudRate, rxPin, txPin, rstPin, verbose)
+  {
     parser = new Parser();
   };
   Result connect(const char *apn);
   Result disconnect();
   Result get(const char *host, const char *path, char *response);
   Result post(const char *host, const char *path, const char *body, char *response);
+  unsigned int readVoltage();
 
-private: 
+private:
   Result prepare(const char *host);
 
   Parser *parser;

@@ -52,19 +52,15 @@ public:
      *  @param verbose controls if the Serial is used for debugging purposes
      */
     SIM7020(unsigned int baudRate,
-           unsigned int rxPin,
-           unsigned int txPin,
-           unsigned int rstPin,
-           int verbose = TRUE) : serialSIM7020(rxPin, txPin)
+            unsigned int rxPin,
+            unsigned int txPin,
+            unsigned int rstPin,
+            int verbose = TRUE) : serialSIM7020(rxPin, txPin)
     {
         serialSIM7020.begin(baudRate);
         resetPin = rstPin;
         verboseEnabled = verbose;
     };
-
-    /** Power on SIM7020
-     */
-    int preInit(void);
 
     /** Check if SIM7020 readable
      */
@@ -121,8 +117,8 @@ public:
      */
     int sendCmdAndWaitForResp(const char *cmd, const char *resp, unsigned timeout);
 
-    /** 
-     *  The sendCmdAndWaitForResp_P() function is similar to sendCmdAndWaitForResp() 
+    /**
+     *  The sendCmdAndWaitForResp_P() function is similar to sendCmdAndWaitForResp()
      *  except that cmd and resp are pointers to a string in program space.
      */
     int sendCmdAndWaitForResp_P(const char *cmd, const char *resp, unsigned timeout);
@@ -131,14 +127,19 @@ public:
      */
     void serialDebug(void);
 
-    void purgeSerial();
+    /*
+     * Sets the module in software sleep mode
+     */
+    int sleep();
 
+    /*
+     * Prepares SIM7020 to start working in full mode removing the sleep mode if set.
+     */
+    int wakeUp();
+
+    void purgeSerial();
     void write(const char *data);
     void write(const char *data, unsigned int size);
-
-    int sleep(bool force = FALSE);
-    int powerDown();
-    void wakeUp();
 
 protected:
     SoftwareSerial serialSIM7020;

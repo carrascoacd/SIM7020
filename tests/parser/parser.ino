@@ -3,8 +3,11 @@
 
 const Parser parser;
 
-test(parsesTheRequestSuccessfully) {
-const char response[] PROGMEM = "\
+test(parsesTheRequestSuccessfully)
+{
+  Serial.println(F("Running parsesTheRequestSuccessfully"));
+
+  const char response[] PROGMEM = "\
 +CHTTPNMIC: 0,0,23,23,7B22617070223A202248656C6C6F20576F726C6421227D\
 ";
   char result[23];
@@ -12,15 +15,27 @@ const char response[] PROGMEM = "\
   assertEqual(result, "{\"app\": \"Hello World!\"}");
 }
 
+test(parsesVoltageSuccessfully)
+{
+  Serial.println(F("Running parsesTheRequestSuccessfully"));
+
+  const char response[] PROGMEM = "+CBC: 88,3418";
+  int voltage = parser.parseVoltage(response);
+  assertEqual(voltage, 3418);
+}
+
 //----------------------------------------------------------------------------
 // setup() and loop()
 //----------------------------------------------------------------------------
 
-void setup() {
+void setup()
+{
   Serial.begin(19200);
-  while(!Serial);
+  while (!Serial)
+    ;
 }
 
-void loop() {
+void loop()
+{
   aunit::TestRunner::run();
 }

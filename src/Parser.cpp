@@ -28,11 +28,13 @@
 #include "Parser.h"
 #include <Arduino.h>
 
-void Parser::encodeBody(const char *body, char *result){
+void Parser::encodeBody(const char *body, char *result)
+{
   ASCIItoHex(body, result);
 }
 
-void Parser::parseResponse(const char *response, char *result) {
+void Parser::parseResponse(const char *response, char *result)
+{
   char tmp[64];
 
   // Fetch parameters
@@ -41,17 +43,20 @@ void Parser::parseResponse(const char *response, char *result) {
   unsigned int currentParameter = 0;
   unsigned int startContentIndex = 0;
   unsigned int tmpIndex = 0;
-  for (unsigned int i = 0; i < strlen(response); ++i){
+  for (unsigned int i = 0; i < strlen(response); ++i)
+  {
     tmp[tmpIndex] = response[i];
-    tmpIndex ++;
-    if (',' == response[i]) {
+    tmpIndex++;
+    if (',' == response[i])
+    {
       tmp[tmpIndex - 1] = '\0';
       tmpIndex = 0;
 
       parameters[currentParameter] = atoi(tmp);
-      currentParameter ++;
+      currentParameter++;
     }
-    if (maxParameters == currentParameter) {
+    if (maxParameters == currentParameter)
+    {
       startContentIndex = i + 1;
       break;
     }
@@ -61,14 +66,16 @@ void Parser::parseResponse(const char *response, char *result) {
   unsigned int resultIndex = 0;
   unsigned int pkgSizeIndex = 3;
 
-  for (unsigned int i = startContentIndex; i < parameters[pkgSizeIndex] * 2 + startContentIndex; i += 2){
-    result[resultIndex] = (char)(hexDigit(response[i]) * 16 + hexDigit(response[i+1]));
-    resultIndex ++;
+  for (unsigned int i = startContentIndex; i < parameters[pkgSizeIndex] * 2 + startContentIndex; i += 2)
+  {
+    result[resultIndex] = (char)(hexDigit(response[i]) * 16 + hexDigit(response[i + 1]));
+    resultIndex++;
   }
   result[resultIndex] = '\0';
 }
 
-int Parser::hexDigit(char c){
+int Parser::hexDigit(char c)
+{
   if (c >= '0' && c <= '9')
     return c - '0';
 
@@ -81,28 +88,47 @@ int Parser::hexDigit(char c){
   return 0;
 }
 
-void Parser::ASCIItoHex(const char *input, char *output){
-    int inputIndex = 0;
-    int outputIndex = 0;
+void Parser::ASCIItoHex(const char *input, char *output)
+{
+  int inputIndex = 0;
+  int outputIndex = 0;
 
-    while(input[inputIndex] != '\0')
-    {
-        sprintf((char*)(output+outputIndex),"%02X", input[inputIndex]);
-        input++;
-        outputIndex+=2;
-    }
+  while (input[inputIndex] != '\0')
+  {
+    sprintf((char *)(output + outputIndex), "%02X", input[inputIndex]);
+    input++;
+    outputIndex += 2;
+  }
 
-    output[outputIndex++] = '\0';
+  output[outputIndex++] = '\0';
 }
 
 // 30 = 3×16^1+0×16^0 = 48 = '0' character
-void Parser::hexToASCII(const char *input, char *output){
+void Parser::hexToASCII(const char *input, char *output)
+{
   int outputIndex = 0;
-  
-  for (unsigned int inputIndex = 0; inputIndex < strlen(input); inputIndex += 2){
-    output[outputIndex] = (char)(hexDigit(input[inputIndex]) * 16 + hexDigit(input[inputIndex+1]));
+
+  for (unsigned int inputIndex = 0; inputIndex < strlen(input); inputIndex += 2)
+  {
+    output[outputIndex] = (char)(hexDigit(input[inputIndex]) * 16 + hexDigit(input[inputIndex + 1]));
     outputIndex++;
   }
-  
-   output[outputIndex++] = '\0';
+
+  output[outputIndex++] = '\0';
+}
+
+unsigned int Parser::parseVoltage(const char *input)
+{
+  char voltage[8];
+
+  const char *commaPointer = strchr(input, ',');
+  unsigned int commaIndex = (int)(commaPointer - input);
+
+  for (int i = 0; i < 4; ++i)
+  {
+    voltage[i] = input[commaIndex + i + 1];
+    voltage[i + 1] = '\0';
+  }
+
+  return atoi(voltage);
 }

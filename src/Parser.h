@@ -30,14 +30,15 @@
 
 class Parser
 {
-  public:
-    void parseResponse(const char *response, char *result);
-    void encodeBody(const char *body, char *result);
+public:
+  void parseResponse(const char *response, char *result);
+  void encodeBody(const char *body, char *result);
+  unsigned parseVoltage(const char *input);
 
-  private:
-    int hexDigit(char c);
-    void ASCIItoHex(const char *input, char *output);
-    void hexToASCII(const char *input, char *output);
+private:
+  int hexDigit(char c);
+  void ASCIItoHex(const char *input, char *output);
+  void hexToASCII(const char *input, char *output);
 };
 
 #endif

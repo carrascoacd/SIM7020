@@ -27,35 +27,11 @@
  */
 
 #include "SIM7020.h"
-// In power down the current is 60uA
-const char POWER_DOWN[] PROGMEM = "AT+CPOWD=1\r\n";
-const char SLEEP_MODE_2[] PROGMEM = "AT+CSCLK=2\r\n";
-const char SLEEP_MODE_1[] PROGMEM = "AT+CSCLK=1\r\n";
-const char SLEEP_MODE_0[] PROGMEM = "AT+CSCLK=0\r\n";
+
+const char SOFTWARE_SLEEP_MODE[] PROGMEM = "AT+CSCLK=2\r\n";
+const char NORMAL_MODE[] PROGMEM = "AT+CSCLK=0\r\n";
 const char AT_OK[] PROGMEM = "OK";
-const char POWER_DOWN_OK[] PROGMEM = "DOWN\r\n";
 const char AT[] PROGMEM = "AT\r\n";
-
-int SIM7020::preInit(void)
-{
-    /*
-    pinMode(resetPin, OUTPUT);
-
-    digitalWrite(resetPin, HIGH);
-    delay(200);
-    digitalWrite(resetPin, LOW);
-    delay(2000);
-    digitalWrite(resetPin, HIGH);
-    delay(3000);
-    */
-   
-    purgeSerial();
-    serialSIM7020.flush();
-
-    sendATTest();
-
-    return TRUE;
-}
 
 int SIM7020::checkReadable(void)
 {
@@ -112,8 +88,10 @@ void SIM7020::sendCmd(const char *cmd, unsigned int delayBeforeSend)
 
 int SIM7020::sendATTest(void)
 {
-    int ret = sendCmdAndWaitForResp_P(AT, AT_OK, DEFAULT_TIMEOUT);
-    return ret;
+    // We use low timeout since it is needed to activate the UART from sleep mode.
+    // Otherwise the module will go to sleep automatically and the AT cmd won´t
+    // have any effect.
+    return sendCmdAndWaitForResp_P(AT, AT_OK, 500);
 }
 
 int SIM7020::waitForResp(const char *resp, unsigned int timeout)
@@ -127,9 +105,10 @@ int SIM7020::waitForResp(const char *resp, unsigned int timeout)
         if (serialSIM7020.available())
         {
             char c = serialSIM7020.read();
-            
-            if (TRUE == verboseEnabled) Serial.print(c);
-                
+
+            if (TRUE == verboseEnabled)
+                Serial.print(c);
+
             sum = (c == resp[sum] || resp[sum] == 'X') ? sum + 1 : 0;
             if (sum == len)
                 break;
@@ -203,24 +182,31 @@ void SIM7020::write(const char *data, unsigned int size)
     serialSIM7020.write(data, size);
 }
 
-int SIM7020::sleep(bool force)
+int SIM7020::sleep()
 {
-    if (force)
-    {
-        return sendCmdAndWaitForResp_P(SLEEP_MODE_1, AT_OK, 2000);
-    }
-    else
-    {
-        return sendCmdAndWaitForResp_P(SLEEP_MODE_2, AT_OK, 2000);
-    }
+    return sendCmdAndWaitForResp_P(SOFTWARE_SLEEP_MODE, AT_OK, DEFAULT_TIMEOUT);
 }
 
-int SIM7020::powerDown()
+int SIM7020::wakeUp()
 {
-    return sendCmdAndWaitForResp_P(POWER_DOWN, POWER_DOWN_OK, 2000);
-}
+    /*
+    pinMode(resetPin, OUTPUT);
 
-void SIM7020::wakeUp()
-{
-    preInit();
+    digitalWrite(resetPin, HIGH);
+    delay(200);
+    digitalWrite(resetPin, LOW);
+    delay(2000);
+    digitalWrite(resetPin, HIGH);
+    delay(3000);
+    */
+
+    // Ensure no data is left to transmit.
+    purgeSerial();
+    serialSIM7020.flush();
+
+    // Sending any AT cmd through the UART will wake up the module from sleep mode.
+    for (int i = 0; i < 3; ++i)
+        sendATTest();
+
+    return sendCmdAndWaitForResp_P(NORMAL_MODE, AT, DEFAULT_TIMEOUT);
 }
